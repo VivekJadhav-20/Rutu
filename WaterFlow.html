@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Water Flow Monitor Dashboard</title>
+  <meta charset="UTF-8" />
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: #0e1726;
+      color: #fff;
+      text-align: center;
+      padding: 40px;
+    }
+    h1 { color: #00bcd4; }
+    .card {
+      background: #1f2937;
+      border-radius: 15px;
+      padding: 20px;
+      width: 320px;
+      margin: 20px auto;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+    .status {
+      font-size: 22px;
+      margin-top: 10px;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0;
+      right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .4s; border-radius: 34px;
+    }
+    .slider:before {
+      position: absolute; content: "";
+      height: 26px; width: 26px; left: 4px; bottom: 4px;
+      background-color: white; transition: .4s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #00bcd4; }
+    input:checked + .slider:before { transform: translateX(26px); }
+  </style>
+</head>
+<body>
+  <h1>💧 Water Flow Monitor</h1>
+
+  <div class="card">
+    <h2>Flow Rate</h2>
+    <p id="flowRate">--</p>
+  </div>
+
+  <div class="card">
+    <h2>Total Volume</h2>
+    <p id="totalVolume">--</p>
+  </div>
+
+  <div class="card">
+    <h2>Leakage Status</h2>
+    <p id="leakStatus">--</p>
+  </div>
+
+  <div class="card">
+    <h2>Alarm Control</h2>
+    <label class="switch">
+      <input type="checkbox" id="alarmSwitch">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <script>
+    // ---------------- FIREBASE CONFIG ----------------
+    const firebaseConfig = {
+      apiKey: "AIzaSyXXXX", // optional if using database secret
+      authDomain: "water-flow-c8701.firebaseapp.com",
+      databaseURL: "https://water-flow-c8701-default-rtdb.firebaseio.com/",
+      projectId: "water-flow-c8701",
+      storageBucket: "water-flow-c8701.appspot.com",
+      messagingSenderId: "XXXXX",
+      appId: "XXXXX"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const flowEl = document.getElementById("flowRate");
+    const totalEl = document.getElementById("totalVolume");
+    const leakEl = document.getElementById("leakStatus");
+    const alarmSwitch = document.getElementById("alarmSwitch");
+
+    // Update page with Firebase data
+    db.ref("/WaterSensor/FlowRate").on("value", snap => {
+      flowEl.textContent = snap.val()?.toFixed(2) + " L/min";
+    });
+
+    db.ref("/WaterSensor/TotalVolume").on("value", snap => {
+      totalEl.textContent = snap.val()?.toFixed(2) + " L";
+    });
+
+    db.ref("/WaterSensor/LeakageDetected").on("value", snap => {
+      const leak = snap.val();
+      leakEl.textContent = leak ? "⚠️ Leakage Detected" : "✅ Normal";
+      leakEl.style.color = leak ? "#ff5252" : "#00e676";
+    });
+
+    db.ref("/WaterSensor/AlarmControl").on("value", snap => {
+      alarmSwitch.checked = snap.val();
+    });
+ss
+    // When switch toggled, update Firebase
+    alarmSwitch.addEventListener("change", () => {
+      db.ref("/WaterSensor/AlarmControl").set(alarmSwitch.checked);
+    });
+  </script>
+</body>
+</html>
